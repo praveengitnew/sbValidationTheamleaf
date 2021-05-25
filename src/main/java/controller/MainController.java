@@ -5,10 +5,14 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import dao.AppUserDAO;
 import dao.CountryDAO;
@@ -77,6 +81,41 @@ public class MainController {
 		return "registerPage";
 		
 	}
+	
+	//this method is called to save the registration information.
+	//@Validate: To ensure that this form
+	//has been validated Before this method is invoked.
+	
+	@RequestMapping(value="/register",method=RequestMethod.POST)
+	public String saveRegister(Model model,
+			@ModelAttribute("appUserForm")@Validated AppUserForm appUserForm,
+	        BindingResult result,//
+	        final RedirectAttributes redirectAttributes){
+	        	
+	        	//Validate results
+	        	if (result.hasErrors()) {
+	        	List<Country>countries=	countryDAO.getCountries();
+	        	
+	        	model.addAttribute("countries",countries);
+	        	return "registerPage";
+					
+				}
+	        	
+	        	AppUser newUser=null;
+	        	try {
+					newUser=appUserDAO.createAppUser(appUserForm);
+				} 
+	        	//other error!!
+	        	catch (Exception e) {
+					// TODO: handle exception
+	        	List<Country>countries=	countryDAO.getCountries();
+	        	model.addAttribute("errorMessage","Error:"+e.getMessage());
+	        	return "registerPage";
+	        	}
+	        	redirectAttributes.addFlashAttribute("flashUser",newUser);
+	        	return "redirect:/registerSuccessful";
+	        }
    
 	
+
 }
